@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "proxy.js": {
+      "maxDuration": 30
+    }
+  }
+}

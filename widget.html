@@ -6,7 +6,8 @@
 <title>Calculateur — Échelle de fascisation</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: Arial, sans-serif; font-size: 14px; color: #1a1a1a; background: #fff; padding: 20px; }
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;600&display=swap');
+  body { font-family: 'IBM Plex Sans', Arial, sans-serif; font-size: 14px; color: #1a1a1a; background: #fff; padding: 20px; }
   h2 { font-size: 17px; font-weight: bold; color: #1a1a1a; margin-bottom: 4px; }
   .subtitle { font-size: 12px; color: #666; margin-bottom: 16px; }
   .input-row { display: flex; gap: 8px; margin-bottom: 16px; }
@@ -83,7 +84,7 @@
 <p class="avertissement">⚠️ Outil pédagogique — non un indice scientifique certifié. Les scores s'appuient sur des sources documentées et vérifiables, mais comportent une part d'interprétation. Basé sur l'échelle de fascisation de la Chronique #46 — Lucie Fourcade.</p>
 
 <script>
-const PROXY_URL = "REMPLACER_PAR_VOTRE_URL_VERCEL/api/proxy";
+const PROXY_URL = "https://fascisation-proxy.vercel.app/api/proxy";
 
 const CRITERES = [
   "A1 — Nationalisme identitaire",
@@ -103,6 +104,85 @@ const CRITERES = [
   "E2 — Impunité extrême-droite",
   "E3 — Criminalisation résistances"
 ];
+
+// Scores ancrés pour les six pays de la Chronique #46
+// Garantit la cohérence avec l'article publié
+const PAYS_ANCRES = {
+  "france": {
+    pays: "France",
+    scores: [1,1,0,0, 1,1,1,0, 1,1,0, 0,0, 1,1,1],
+    total: 10,
+    niveau: "Fascisation avancée",
+    justification: "La France atteint 12/16 selon l'analyse de la Chronique #46 (Lucie Fourcade). La concentration des médias nationaux aux mains de milliardaires proches du pouvoir (B3), la répression documentée des manifestations par Liberties et Amnesty International (C1), et la banalisation du discours identitaire jusqu'au cœur des partis de gouvernement (E1) constituent les marqueurs les plus préoccupants. Sans gouvernement d'extrême-droite ni culte du chef institué, la fascisation française opère principalement par érosion des garde-fous institutionnels depuis le centre.",
+    ancre: true
+  },
+  "italie": {
+    pays: "Italie",
+    scores: [1,1,1,1, 1,1,1,1, 1,1,0, 0,1, 1,1,1],
+    total: 15,
+    niveau: "Fascisme de fait",
+    justification: "L'Italie obtient 15/16 selon l'analyse de la Chronique #46 (Lucie Fourcade). Giorgia Meloni est issue d'une tradition ouvertement post-fasciste. Depuis 2022, le gouvernement sape l'indépendance judiciaire, criminalise les ONG de sauvetage en mer et poursuit des journalistes pour avoir révélé des écoutes embarrassantes. Le Rule of Law Report 2025 de Liberties classe l'Italie parmi les pays « démanteleurs » de l'État de droit. Comme l'analyse Foessel : tout se passe dans les formes, mais l'État de droit se vide de son contenu.",
+    ancre: true
+  },
+  "allemagne": {
+    pays: "Allemagne",
+    scores: [1,1,0,0, 0,0,0,0, 0,0,0, 0,0, 1,1,1],
+    total: 6,
+    niveau: "Processus de fascisation enclenché",
+    justification: "L'Allemagne obtient 6/16 selon l'analyse de la Chronique #46 (Lucie Fourcade). L'AfD — dont la sympathie pour le nazisme est telle que le RN l'a exclue de son groupe au Parlement européen — est le deuxième parti du pays. Pourtant les garde-fous constitutionnels issus de la mémoire du nazisme (Grundgesetz, justice indépendante, structure fédérale) restent opérationnels. L'Allemagne prouve simultanément que le processus peut être contenu, et qu'il faut l'avoir vécu dans la chair pour vraiment vouloir l'arrêter.",
+    ancre: true
+  },
+  "états-unis": {
+    pays: "États-Unis",
+    scores: [1,1,1,1, 1,1,1,1, 1,1,1, 1,1, 1,1,1],
+    total: 16,
+    niveau: "Fascisme consolidé",
+    justification: "Les États-Unis atteignent 16/16 selon l'analyse de la Chronique #46 (Lucie Fourcade). L'historien Robert Paxton a qualifié en 2025 l'étiquette fasciste de « non seulement acceptable, mais nécessaire » pour décrire le trumpisme. Arrestations de migrants quintuplées en six mois, contre-pouvoirs muselés, institutions scientifiques épurées, justice instrumentalisée, culte de la personnalité organisé en système : tout concourt à un fascisme nouveau dans ses formes (la tech comme outil de domination) mais reconnaissable dans ses structures.",
+    ancre: true
+  },
+  "etats-unis": null, // alias
+  "usa": null,
+  "israël": {
+    pays: "Israël",
+    scores: [1,1,1,1, 1,0,1,1, 0,1,1, 1,1, 1,1,1],
+    total: 15,
+    niveau: "Fascisme de fait",
+    justification: "Israël obtient 15/16 selon l'analyse de la Chronique #46 (Lucie Fourcade). Depuis 2022, la coalition Netanyahu-Ben Gvir-Smotrich mène une offensive contre l'indépendance de la Cour suprême. RSF classe la liberté de la presse en recul. Des groupes miliciens opèrent en Cisjordanie avec une impunité documentée. La Cour internationale de Justice a ordonné des mesures conservatoires au titre de la Convention sur le génocide concernant Gaza. Les voix dissidentes font l'objet de poursuites croissantes.",
+    ancre: true
+  },
+  "israel": null,
+  "russie": {
+    pays: "Russie",
+    scores: [1,1,1,1, 1,1,1,1, 1,1,1, 1,1, 1,1,1],
+    total: 16,
+    niveau: "Fascisme consolidé",
+    justification: "La Russie atteint 16/16 selon l'analyse de la Chronique #46 (Lucie Fourcade). Régime de parti unique, culte de la personnalité à l'échelle nationale, élimination physique ou judiciaire des opposants, contrôle total des médias, guerre d'agression présentée comme combat civilisationnel, surveillance numérique massive, milices paramilitaires institutionnalisées. La Russie n'est plus en processus de fascisation : elle est un fascisme constitué. Elle est aussi la démonstration que le processus peut aller jusqu'au bout quand rien ne l'arrête.",
+    ancre: true
+  }
+};
+
+function normaliserPays(str) {
+  return str.toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[-\s]/g, "")
+    .trim();
+}
+
+function chercherAncre(pays) {
+  const cle = normaliserPays(pays);
+  // Cherche correspondance exacte ou alias
+  for (const [k, v] of Object.entries(PAYS_ANCRES)) {
+    if (normaliserPays(k) === cle) {
+      // Si c'est un alias (null), retrouver la valeur cible
+      if (v === null) {
+        if (cle === normaliserPays("etats-unis") || cle === normaliserPays("usa")) return PAYS_ANCRES["états-unis"];
+        if (cle === normaliserPays("israel")) return PAYS_ANCRES["israël"];
+      }
+      return v;
+    }
+  }
+  return null;
+}
 
 function niveauCouleur(score) {
   if (score <= 4) return "#2d9e2d";
@@ -130,26 +210,36 @@ async function calculer() {
   const card = document.getElementById('result-card');
 
   btn.disabled = true;
-  loading.style.display = 'block';
   error.textContent = '';
   card.style.display = 'none';
 
-  const prompt = `Tu es un expert en science politique spécialisé dans l'analyse des processus de fascisation.
+  // Vérifier si pays ancré
+  const ancre = chercherAncre(pays);
+  if (ancre) {
+    afficherResultat(ancre, pays);
+    btn.disabled = false;
+    return;
+  }
 
-Évalue le pays suivant : "${pays}"
+  loading.style.display = 'block';
 
-Utilise strictement les 16 critères de l'échelle de fascisation. Pour chaque critère, attribue 0 (absent ou marginal) ou 1 (documenté et significatif). Base-toi uniquement sur des faits vérifiables et documentés.
+  const prompt = `Tu es un expert en science politique spécialisé dans l'analyse des processus de fascisation contemporains.
+
+ÉTAPE 1 — VALIDATION : Le texte saisi est-il un État souverain reconnu au niveau international ? Si ce n'est pas un pays réel (exemple : ville, région, personnage fictif, entité imaginaire, nom incompréhensible), réponds UNIQUEMENT avec ce JSON d'erreur :
+{"erreur": "Veuillez saisir le nom d'un pays souverain reconnu."}
+
+ÉTAPE 2 — ÉVALUATION (uniquement si pays valide) : Évalue "${pays}" selon les 16 critères de l'échelle de fascisation. Pour chaque critère, attribue 0 (absent ou marginal) ou 1 (documenté et significatif). Base-toi uniquement sur des faits vérifiables, en citant si possible les organisations de référence (RSF, Liberties, Amnesty International, Human Rights Watch, Rule of Law Index).
 
 Critères :
 ${CRITERES.map((c, i) => `${i+1}. ${c}`).join('\n')}
 
-Réponds UNIQUEMENT en JSON valide, sans texte avant ou après :
+Réponds UNIQUEMENT en JSON valide, sans texte avant ou après, sans markdown :
 {
-  "pays": "nom du pays",
-  "scores": [16 valeurs 0 ou 1 dans l'ordre],
+  "pays": "nom officiel du pays en français",
+  "scores": [16 valeurs 0 ou 1 dans l'ordre des critères],
   "total": nombre entier 0-16,
-  "niveau": "libellé du niveau",
-  "justification": "2-3 phrases factuelles en français sans markdown"
+  "niveau": "libellé exact du niveau correspondant",
+  "justification": "4 à 6 phrases factuelles en français, sans markdown, citant au moins une organisation de référence (RSF, Liberties, Amnesty, HRW) pour les critères cochés à 1. Expliquer les critères les plus significatifs."
 }`;
 
   try {
@@ -158,7 +248,7 @@ Réponds UNIQUEMENT en JSON valide, sans texte avant ou après :
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
+        max_tokens: 1200,
         messages: [{ role: 'user', content: prompt }]
       })
     });
@@ -166,7 +256,12 @@ Réponds UNIQUEMENT en JSON valide, sans texte avant ou après :
     const data = await response.json();
     const text = data.content.map(b => b.text || '').join('').replace(/```json|```/g, '').trim();
     const result = JSON.parse(text);
-    afficherResultat(result);
+
+    if (result.erreur) {
+      error.textContent = result.erreur;
+    } else {
+      afficherResultat(result, pays);
+    }
 
   } catch(e) {
     error.textContent = "Erreur lors de l'analyse. Vérifiez le nom du pays et réessayez.";
@@ -176,7 +271,7 @@ Réponds UNIQUEMENT en JSON valide, sans texte avant ou après :
   }
 }
 
-function afficherResultat(result) {
+function afficherResultat(result, paysInput) {
   const score = Math.min(16, Math.max(0, parseInt(result.total)));
   const couleur = niveauCouleur(score);
 
@@ -187,6 +282,17 @@ function afficherResultat(result) {
   document.getElementById('justif').textContent = result.justification || '';
   document.getElementById('gauge').style.width = Math.round((score / 16) * 100) + '%';
   document.getElementById('gauge').style.background = couleur;
+
+  // Badge "score ancré" si pays de la chronique
+  const badgeExist = document.getElementById('ancre-badge');
+  if (badgeExist) badgeExist.remove();
+  if (result.ancre) {
+    const badge = document.createElement('div');
+    badge.id = 'ancre-badge';
+    badge.style.cssText = 'font-size:11px;color:#888;margin-bottom:10px;font-style:italic;';
+    badge.textContent = '★ Score établi dans la Chronique #46 — Lucie Fourcade';
+    document.getElementById('result-card').insertBefore(badge, document.getElementById('justif'));
+  }
 
   const grid = document.getElementById('crit-grid');
   grid.innerHTML = '';
@@ -199,13 +305,26 @@ function afficherResultat(result) {
 
   document.getElementById('result-card').style.display = 'block';
   window._lastResult = result;
-  window._lastPays = document.getElementById('pays-input').value.trim();
+  window._lastPays = result.pays || paysInput;
 }
 
 function partager() {
   if (!window._lastResult) return;
   const s = window._lastResult;
-  const txt = `Score de fascisation — ${window._lastPays} : ${s.total}/16 (${s.niveau})\nÉchelle de fascisation — Chronique #46 — chroniques-nouvelle-resistance.blog`;
+  const score = s.total;
+  const niveau = s.niveau || niveauLabel(score);
+  // Prendre la première phrase de la justification comme accroche
+  const premiereFrase = (s.justification || '').split('.')[0].trim();
+  const txt = [
+    `🔴 Score de fascisation — ${window._lastPays} : ${score}/16`,
+    `Niveau : ${niveau}`,
+    ``,
+    premiereFrase ? `${premiereFrase}.` : '',
+    ``,
+    `Échelle de fascisation — Chronique #46`,
+    `👉 chroniques-nouvelle-resistance.blog`
+  ].filter(Boolean).join('\n');
+
   navigator.clipboard.writeText(txt).then(() => {
     const btn = document.querySelector('.share-btn');
     btn.textContent = 'Copié !';

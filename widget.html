@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculateur — Échelle de fascisation</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, sans-serif; font-size: 14px; color: #1a1a1a; background: #fff; padding: 20px; }
+  h2 { font-size: 17px; font-weight: bold; color: #1a1a1a; margin-bottom: 4px; }
+  .subtitle { font-size: 12px; color: #666; margin-bottom: 16px; }
+  .input-row { display: flex; gap: 8px; margin-bottom: 16px; }
+  .input-row input { flex: 1; padding: 0 12px; height: 38px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; font-family: Arial, sans-serif; }
+  .input-row input:focus { outline: none; border-color: #C00000; }
+  .input-row button { height: 38px; padding: 0 18px; border: 1px solid #C00000; border-radius: 6px; background: #C00000; color: #fff; font-size: 14px; font-family: Arial, sans-serif; cursor: pointer; white-space: nowrap; }
+  .input-row button:hover { background: #a00000; }
+  .input-row button:disabled { opacity: 0.5; cursor: not-allowed; }
+  .loading { font-size: 13px; color: #666; margin-bottom: 12px; display: none; font-style: italic; }
+  .error { font-size: 13px; color: #C00000; margin-bottom: 12px; }
+  .result-card { border: 1px solid #e0e0e0; border-radius: 10px; padding: 18px; margin-bottom: 14px; display: none; }
+  .score-row { display: flex; align-items: center; gap: 16px; margin-bottom: 12px; }
+  .score-big { font-size: 42px; font-weight: bold; line-height: 1; }
+  .score-label { font-size: 12px; color: #666; }
+  .score-level { font-size: 14px; font-weight: bold; margin-top: 3px; }
+  .gauge-track { height: 10px; border-radius: 5px; background: #f0f0f0; margin-bottom: 14px; overflow: hidden; }
+  .gauge-fill { height: 100%; border-radius: 5px; transition: width 0.6s ease; }
+  .justif { font-size: 13px; color: #444; line-height: 1.6; margin-bottom: 14px; border-left: 3px solid #C00000; padding-left: 10px; }
+  .criteria-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-bottom: 12px; }
+  .crit-item { display: flex; align-items: flex-start; gap: 7px; font-size: 11px; color: #555; padding: 5px 7px; border-radius: 5px; background: #f8f8f8; }
+  .crit-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; margin-top: 2px; }
+  .dot-1 { background: #C00000; }
+  .dot-0 { background: #ccc; }
+  .footer-row { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
+  .share-btn { font-size: 12px; padding: 5px 12px; border: 1px solid #ccc; border-radius: 5px; background: transparent; color: #666; cursor: pointer; font-family: Arial, sans-serif; }
+  .share-btn:hover { background: #f5f5f5; }
+  .blog-link { font-size: 11px; color: #999; text-decoration: none; }
+  .blog-link:hover { color: #C00000; }
+  .legend { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+  .legend-item { font-size: 11px; padding: 3px 7px; border-radius: 4px; border: 1px solid #e0e0e0; color: #666; }
+  .avertissement { font-size: 11px; color: #999; margin-top: 14px; line-height: 1.5; border-top: 1px solid #eee; padding-top: 10px; }
+</style>
+</head>
+<body>
+
+<h2>Calculateur — Échelle de fascisation</h2>
+<p class="subtitle">Saisissez un pays pour obtenir son score selon les 16 critères de l'échelle.</p>
+
+<div class="input-row">
+  <input type="text" id="pays-input" placeholder="Ex : Hongrie, Brésil, Turquie…" />
+  <button id="calc-btn" onclick="calculer()">Calculer</button>
+</div>
+
+<div class="loading" id="loading">Analyse en cours…</div>
+<div class="error" id="error"></div>
+
+<div class="result-card" id="result-card">
+  <div class="score-row">
+    <div class="score-big" id="score-num">—</div>
+    <div>
+      <div class="score-label">Score de fascisation / 16</div>
+      <div class="score-level" id="score-level">—</div>
+    </div>
+  </div>
+  <div class="gauge-track">
+    <div class="gauge-fill" id="gauge" style="width:0%;"></div>
+  </div>
+  <div class="justif" id="justif"></div>
+  <div class="criteria-grid" id="crit-grid"></div>
+  <div class="footer-row">
+    <button class="share-btn" onclick="partager()">Copier le résultat</button>
+    <a class="blog-link" href="https://www.chroniques-nouvelle-resistance.blog" target="_blank">chroniques-nouvelle-resistance.blog</a>
+  </div>
+</div>
+
+<div class="legend">
+  <span class="legend-item">0–4 : Démocratie vigilante</span>
+  <span class="legend-item">5–8 : Processus enclenché</span>
+  <span class="legend-item">9–12 : Fascisation avancée</span>
+  <span class="legend-item">13–15 : Fascisme de fait</span>
+  <span class="legend-item">16 : Fascisme consolidé</span>
+</div>
+
+<p class="avertissement">⚠️ Outil pédagogique — non un indice scientifique certifié. Les scores s'appuient sur des sources documentées et vérifiables, mais comportent une part d'interprétation. Basé sur l'échelle de fascisation de la Chronique #46 — Lucie Fourcade.</p>
+
+<script>
+const PROXY_URL = "REMPLACER_PAR_VOTRE_URL_VERCEL/api/proxy";
+
+const CRITERES = [
+  "A1 — Nationalisme identitaire",
+  "A2 — Ennemi intérieur",
+  "A3 — Culte du chef",
+  "A4 — Réhabilitation historique",
+  "B1 — Attaque judiciaire",
+  "B2 — Contournement parlement",
+  "B3 — Contrôle médias",
+  "B4 — Instrumentalisation Constitution",
+  "C1 — Répression manifestations",
+  "C2 — Libertés académiques",
+  "C3 — Surveillance numérique",
+  "D1 — Milices / paramilitarisme",
+  "D2 — Violence d'État ciblée",
+  "E1 — Banalisation extrême-droite",
+  "E2 — Impunité extrême-droite",
+  "E3 — Criminalisation résistances"
+];
+
+function niveauCouleur(score) {
+  if (score <= 4) return "#2d9e2d";
+  if (score <= 8) return "#e8a020";
+  if (score <= 12) return "#e06020";
+  if (score <= 15) return "#C00000";
+  return "#7a0000";
+}
+
+function niveauLabel(score) {
+  if (score <= 4) return "Démocratie vigilante";
+  if (score <= 8) return "Processus de fascisation enclenché";
+  if (score <= 12) return "Fascisation avancée";
+  if (score <= 15) return "Fascisme de fait";
+  return "Fascisme consolidé";
+}
+
+async function calculer() {
+  const pays = document.getElementById('pays-input').value.trim();
+  if (!pays) return;
+
+  const btn = document.getElementById('calc-btn');
+  const loading = document.getElementById('loading');
+  const error = document.getElementById('error');
+  const card = document.getElementById('result-card');
+
+  btn.disabled = true;
+  loading.style.display = 'block';
+  error.textContent = '';
+  card.style.display = 'none';
+
+  const prompt = `Tu es un expert en science politique spécialisé dans l'analyse des processus de fascisation.
+
+Évalue le pays suivant : "${pays}"
+
+Utilise strictement les 16 critères de l'échelle de fascisation. Pour chaque critère, attribue 0 (absent ou marginal) ou 1 (documenté et significatif). Base-toi uniquement sur des faits vérifiables et documentés.
+
+Critères :
+${CRITERES.map((c, i) => `${i+1}. ${c}`).join('\n')}
+
+Réponds UNIQUEMENT en JSON valide, sans texte avant ou après :
+{
+  "pays": "nom du pays",
+  "scores": [16 valeurs 0 ou 1 dans l'ordre],
+  "total": nombre entier 0-16,
+  "niveau": "libellé du niveau",
+  "justification": "2-3 phrases factuelles en français sans markdown"
+}`;
+
+  try {
+    const response = await fetch(PROXY_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+
+    const data = await response.json();
+    const text = data.content.map(b => b.text || '').join('').replace(/```json|```/g, '').trim();
+    const result = JSON.parse(text);
+    afficherResultat(result);
+
+  } catch(e) {
+    error.textContent = "Erreur lors de l'analyse. Vérifiez le nom du pays et réessayez.";
+  } finally {
+    btn.disabled = false;
+    loading.style.display = 'none';
+  }
+}
+
+function afficherResultat(result) {
+  const score = Math.min(16, Math.max(0, parseInt(result.total)));
+  const couleur = niveauCouleur(score);
+
+  document.getElementById('score-num').textContent = score;
+  document.getElementById('score-num').style.color = couleur;
+  document.getElementById('score-level').textContent = result.niveau || niveauLabel(score);
+  document.getElementById('score-level').style.color = couleur;
+  document.getElementById('justif').textContent = result.justification || '';
+  document.getElementById('gauge').style.width = Math.round((score / 16) * 100) + '%';
+  document.getElementById('gauge').style.background = couleur;
+
+  const grid = document.getElementById('crit-grid');
+  grid.innerHTML = '';
+  (result.scores || []).forEach((val, i) => {
+    const div = document.createElement('div');
+    div.className = 'crit-item';
+    div.innerHTML = `<span class="crit-dot ${val === 1 ? 'dot-1' : 'dot-0'}"></span><span>${CRITERES[i] || ''}</span>`;
+    grid.appendChild(div);
+  });
+
+  document.getElementById('result-card').style.display = 'block';
+  window._lastResult = result;
+  window._lastPays = document.getElementById('pays-input').value.trim();
+}
+
+function partager() {
+  if (!window._lastResult) return;
+  const s = window._lastResult;
+  const txt = `Score de fascisation — ${window._lastPays} : ${s.total}/16 (${s.niveau})\nÉchelle de fascisation — Chronique #46 — chroniques-nouvelle-resistance.blog`;
+  navigator.clipboard.writeText(txt).then(() => {
+    const btn = document.querySelector('.share-btn');
+    btn.textContent = 'Copié !';
+    setTimeout(() => { btn.textContent = 'Copier le résultat'; }, 2000);
+  });
+}
+
+document.getElementById('pays-input').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') calculer();
+});
+</script>
+</body>
+</html>

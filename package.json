@@ -1,0 +1,6 @@
+{
+  "name": "fascisation-proxy",
+  "version": "1.0.0",
+  "description": "Proxy API Anthropic pour le calculateur de fascisation",
+  "private": true
+}
